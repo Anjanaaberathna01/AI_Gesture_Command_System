@@ -27,7 +27,7 @@ def main():
     finger_detector = FingerDetector()
     gesture_recognizer = GestureRecognizer()
     thumb_bend_detector = ThumbBendDetector(
-        bend_threshold=145
+        bend_threshold=165
     )
     mouse_controller = MouseController(
         smoothing=0.25
@@ -90,7 +90,7 @@ def main():
                         f"Thumb Angle: {thumb_data['Angle']} | "
                         f"Thumb State: {thumb_data['State']}"
                     )
-                    
+
                     # Mouse Cursor Control
                     if gesture == "POINTING":
 
