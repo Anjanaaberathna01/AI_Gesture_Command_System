@@ -6,6 +6,7 @@ from camera.webcam import Webcam
 from vision.hand_tracker import HandTracker
 from gestures.finger_detector import FingerDetector
 from gestures.gesture_recognizer import GestureRecognizer
+from control.mouse_controller import MouseController
 
 def main():
 
@@ -24,6 +25,9 @@ def main():
 
     finger_detector = FingerDetector()
     gesture_recognizer = GestureRecognizer()
+    mouse_controller = MouseController(
+        smoothing=0.25
+    )
     previous_gestures = {}
 
     previous_time = time.time()
@@ -71,6 +75,16 @@ def main():
 
                     # Recognize gesture
                     gesture = gesture_recognizer.recognize(fingers)
+
+                    # Mouse Cursor Control
+                    if gesture == "POINTING":
+
+                        index_tip = hand_landmarks[8]
+
+                        mouse_controller.move_cursor(
+                            index_tip.x,
+                            index_tip.y
+                        )
 
                     # Print only when gesture changes
                     if previous_gestures.get(hand_index) != gesture:
@@ -165,7 +179,7 @@ def main():
                 break
 
     finally:
-
+        mouse_controller.release()
         tracker.close()
         webcam.release()
 
