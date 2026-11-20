@@ -1,51 +1,51 @@
-import cv2  # type: ignore[reportMissingImports]
-import time
+
+import cv2
 
 
 class Webcam:
-    def __init__(self, camera_index=0, width=640, height=480):
-        self.camera_index = camera_index
-        # Initialize webcam
+
+    def __init__(
+        self,
+        camera_index=0,
+        width=640,
+        height=480
+    ):
+
         self.cap = cv2.VideoCapture(
             camera_index,
-            cv2.CAP_DSHOW
+            cv2.CAP_MSMF
         )
-        if not self.cap.isOpened():
-            raise RuntimeError(
-                f"Cannot open camera: {camera_index}"
-            )
-        # Set camera resolution
-        self.cap.set(
-            cv2.CAP_PROP_FRAME_WIDTH,
-            width
-        )
-        self.cap.set(
-            cv2.CAP_PROP_FRAME_HEIGHT,
-            height
-        )
-        # Reduce camera buffer delay
-        self.cap.set(
-            cv2.CAP_PROP_BUFFERSIZE,
-            1
-        )
-        self.width = width
-        self.height = height
 
-        print("Webcam initialized successfully!")
-        print(f"Camera Index: {camera_index}")
-        print(f"Resolution: {width}x{height}")
+        if not self.cap.isOpened():
+            raise RuntimeError("Camera could not open!")
+
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+
+        print("Camera opened successfully!")
+        print("Camera Index:", camera_index)
+        print(
+            "Resolution:",
+            int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            "x",
+            int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        )
 
     def read_frame(self):
+
         success, frame = self.cap.read()
+
         if not success:
+            print("Frame capture failed!")
             return None
-        # Mirror the webcam image
-        frame = cv2.flip(frame, 1)
+
         return frame
 
     def release(self):
-        if self.cap is not None:
+
+        if self.cap.isOpened():
             self.cap.release()
+
         cv2.destroyAllWindows()
 
         print("Webcam released successfully!")

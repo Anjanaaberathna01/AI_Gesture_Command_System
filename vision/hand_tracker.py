@@ -34,8 +34,14 @@ class HandTracker:
             options
         )
 
-        self.mp_connections = vision.HandLandmarker.HAND_CONNECTIONS
-
+        self.mp_connections = [
+            (0, 1), (1, 2), (2, 3), (3, 4),
+            (0, 5), (5, 6), (6, 7), (7, 8),
+            (5, 9), (9, 10), (10, 11), (11, 12),
+            (9, 13), (13, 14), (14, 15), (15, 16),
+            (13, 17), (17, 18), (18, 19), (19, 20),
+            (0, 17)
+        ]
         print("MediaPipe Hand Tracker initialized!")
 
     def detect_hands(self, frame, timestamp_ms):
@@ -60,6 +66,7 @@ class HandTracker:
 
         return result
 
+
     def draw_landmarks(self, frame, result):
 
         if not result.hand_landmarks:
@@ -67,14 +74,13 @@ class HandTracker:
 
         height, width, _ = frame.shape
 
-        # Draw each detected hand
         for hand_landmarks in result.hand_landmarks:
 
-            # Draw connections
-            for connection in self.mp_connections:
+            # Draw green connections
+            for start_idx, end_idx in self.mp_connections:
 
-                start = hand_landmarks[connection.start]
-                end = hand_landmarks[connection.end]
+                start = hand_landmarks[start_idx]
+                end = hand_landmarks[end_idx]
 
                 start_point = (
                     int(start.x * width),
@@ -94,7 +100,7 @@ class HandTracker:
                     2
                 )
 
-            # Draw 21 landmarks
+            # Draw red landmark points
             for landmark in hand_landmarks:
 
                 x = int(landmark.x * width)
@@ -109,6 +115,7 @@ class HandTracker:
                 )
 
         return frame
+
 
     def close(self):
 
