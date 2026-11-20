@@ -5,6 +5,7 @@ import time
 from camera.webcam import Webcam
 from vision.hand_tracker import HandTracker
 from gestures.finger_detector import FingerDetector
+from gestures.gesture_recognizer import GestureRecognizer
 
 def main():
 
@@ -22,6 +23,8 @@ def main():
     )
 
     finger_detector = FingerDetector()
+    gesture_recognizer = GestureRecognizer()
+    previous_gestures = {}
 
     previous_time = time.time()
     frame_counter = 0
@@ -64,6 +67,38 @@ def main():
                     fingers = finger_detector.detect_fingers(
                         hand_landmarks,
                         handedness
+                    )
+
+                    # Recognize gesture
+                    gesture = gesture_recognizer.recognize(fingers)
+
+                    # Print only when gesture changes
+                    if previous_gestures.get(hand_index) != gesture:
+
+                        print(
+                            f"{handedness} Hand | "
+                            f"Gesture: {gesture} | "
+                            f"Fingers: {fingers['Count']}"
+                        )
+
+                        previous_gestures[hand_index] = gesture
+
+                    # Display gesture on webcam
+                    height, width, _ = frame.shape
+
+                    wrist = hand_landmarks[0]
+
+                    text_x = int(wrist.x * width)
+                    text_y = int(wrist.y * height) - 20
+
+                    cv2.putText(
+                        frame,
+                        gesture,
+                        (text_x, max(text_y, 150)),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.8,
+                        (0, 255, 255),
+                        2
                     )
 
                     print(
