@@ -7,6 +7,7 @@ from vision.hand_tracker import HandTracker
 from gestures.finger_detector import FingerDetector
 from gestures.gesture_recognizer import GestureRecognizer
 from control.mouse_controller import MouseController
+from gestures.thumb_bend_detector import ThumbBendDetector
 
 def main():
 
@@ -25,6 +26,9 @@ def main():
 
     finger_detector = FingerDetector()
     gesture_recognizer = GestureRecognizer()
+    thumb_bend_detector = ThumbBendDetector(
+        bend_threshold=145
+    )
     mouse_controller = MouseController(
         smoothing=0.25
     )
@@ -76,6 +80,17 @@ def main():
                     # Recognize gesture
                     gesture = gesture_recognizer.recognize(fingers)
 
+                    # Thumb Bend Detection
+                    thumb_data = thumb_bend_detector.detect_bend(
+                        hand_landmarks
+                    )
+
+                    print(
+                        f"{handedness} Hand | "
+                        f"Thumb Angle: {thumb_data['Angle']} | "
+                        f"Thumb State: {thumb_data['State']}"
+                    )
+                    
                     # Mouse Cursor Control
                     if gesture == "POINTING":
 
