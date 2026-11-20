@@ -6,8 +6,8 @@ from control.mouse_click_controller import MouseClickController
 
 controller = MouseClickController(
     debounce_time=0.08,
-    double_click_interval=0.35,
-    execute_clicks=False
+    double_click_interval=0.45,
+    execute_clicks=True
 )
 
 

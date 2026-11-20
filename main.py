@@ -30,7 +30,7 @@ def main():
     gesture_recognizer = GestureRecognizer()
     mouse_click_controller = MouseClickController(
         debounce_time=0.08,
-        double_click_interval=0.35,
+        double_click_interval=0.45,
         execute_clicks=True
     )
     thumb_bend_detector = ThumbBendDetector(
