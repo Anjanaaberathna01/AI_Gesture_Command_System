@@ -1,7 +1,7 @@
 
 import time
 
-from mouse_controller import MouseClickController
+from control.mouse_click_controller import MouseClickController
 
 
 controller = MouseClickController(

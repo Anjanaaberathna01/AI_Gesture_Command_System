@@ -1,100 +1,56 @@
 
-import time
 import pyautogui
 
 
-class MouseClickController:
+class MouseController:
 
-    def __init__(
-        self,
-        debounce_time=0.08,
-        double_click_interval=0.35,
-        execute_clicks=False
-    ):
+    def __init__(self, smoothing=0.25):
 
-        self.debounce_time = debounce_time
-        self.double_click_interval = double_click_interval
-        self.execute_clicks = execute_clicks
+        self.screen_width, self.screen_height = pyautogui.size()
 
-        self.raw_state = None
-        self.raw_state_time = time.monotonic()
+        self.smoothing = smoothing
 
-        self.stable_state = None
+        self.current_x = self.screen_width // 2
+        self.current_y = self.screen_height // 2
 
-        self.pending_click_time = None
+        pyautogui.FAILSAFE = True
+        pyautogui.PAUSE = 0
 
-        print("Mouse Click Controller initialized!")
-        print("Click execution:", execute_clicks)
+        print("Mouse Controller initialized!")
+        print(
+            f"Screen: {self.screen_width}x{self.screen_height}"
+        )
 
-    def update(self, is_bent):
+    def move_cursor(self, landmark_x, landmark_y):
 
-        current_time = time.monotonic()
+        target_x = int(landmark_x * self.screen_width)
+        target_y = int(landmark_y * self.screen_height)
 
-        # Detect raw thumb state changes
-        if is_bent != self.raw_state:
+        # Keep cursor within screen boundaries
+        target_x = max(
+            0,
+            min(target_x, self.screen_width - 1)
+        )
 
-            self.raw_state = is_bent
-            self.raw_state_time = current_time
+        target_y = max(
+            0,
+            min(target_y, self.screen_height - 1)
+        )
 
-        # Confirm state after debounce period
-        if (
-            current_time - self.raw_state_time
-            >= self.debounce_time
-        ):
+        # Smooth cursor movement
+        self.current_x += (
+            target_x - self.current_x
+        ) * self.smoothing
 
-            if self.stable_state != self.raw_state:
+        self.current_y += (
+            target_y - self.current_y
+        ) * self.smoothing
 
-                previous_state = self.stable_state
-                self.stable_state = self.raw_state
+        pyautogui.moveTo(
+            int(self.current_x),
+            int(self.current_y)
+        )
 
-                # Thumb changed from BENT to EXTENDED
-                if previous_state is True and self.stable_state is False:
+    def release(self):
 
-                    self.register_click(current_time)
-
-        # Check whether pending single click should execute
-        if self.pending_click_time is not None:
-
-            elapsed = current_time - self.pending_click_time
-
-            if elapsed > self.double_click_interval:
-
-                self.single_click()
-                self.pending_click_time = None
-
-    def register_click(self, current_time):
-
-        if self.pending_click_time is None:
-
-            self.pending_click_time = current_time
-
-        else:
-
-            elapsed = current_time - self.pending_click_time
-
-            if elapsed <= self.double_click_interval:
-
-                self.double_click()
-                self.pending_click_time = None
-
-            else:
-
-                self.single_click()
-                self.pending_click_time = current_time
-
-    def single_click(self):
-
-        print("SINGLE CLICK DETECTED")
-
-        if self.execute_clicks:
-            pyautogui.click(button="left")
-
-    def double_click(self):
-
-        print("DOUBLE CLICK DETECTED")
-
-        if self.execute_clicks:
-            pyautogui.doubleClick(
-                interval=0.1,
-                button="left"
-            )
+        print("Mouse Controller released!")

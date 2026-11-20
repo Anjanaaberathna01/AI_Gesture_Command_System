@@ -7,7 +7,7 @@ from vision.hand_tracker import HandTracker
 from gestures.finger_detector import FingerDetector
 from gestures.gesture_recognizer import GestureRecognizer
 from control.mouse_controller import MouseController
-from control.mouse_controller import MouseClickController
+from control.mouse_click_controller import MouseClickController
 from gestures.thumb_bend_detector import ThumbBendDetector
 
 
@@ -31,7 +31,7 @@ def main():
     mouse_click_controller = MouseClickController(
         debounce_time=0.08,
         double_click_interval=0.35,
-        execute_clicks=False
+        execute_clicks=True
     )
     thumb_bend_detector = ThumbBendDetector(
         bend_threshold=165
