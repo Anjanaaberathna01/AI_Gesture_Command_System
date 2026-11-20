@@ -34,7 +34,7 @@ def main():
         execute_clicks=True
     )
     thumb_bend_detector = ThumbBendDetector(
-        bend_threshold=165
+        bend_threshold=160
     )
     mouse_controller = MouseController(
         smoothing=0.25
@@ -98,8 +98,10 @@ def main():
                         f"Thumb State: {thumb_data['State']}"
                     )
                     # Mouse Click Control
+                    is_thumb_bent = thumb_data["Bent"]
+
                     mouse_click_controller.update(
-                        thumb_data['State'] == "BENT"
+                        is_thumb_bent
                     )
 
                     # Mouse Cursor Control
