@@ -4,7 +4,7 @@ import time
 
 from camera.webcam import Webcam
 from vision.hand_tracker import HandTracker
-
+from gestures.finger_detector import FingerDetector
 
 def main():
 
@@ -21,19 +21,17 @@ def main():
         tracking_confidence=0.5
     )
 
+    finger_detector = FingerDetector()
+
     previous_time = time.time()
     frame_counter = 0
 
     try:
-
         while True:
-
             frame = webcam.read_frame()
-
             if frame is None:
                 print("Camera frame error!")
                 break
-
             timestamp_ms = int(time.perf_counter() * 1000)
 
             # Detect hands
@@ -41,15 +39,38 @@ def main():
                 frame,
                 timestamp_ms
             )
-
-            # Draw hand landmarks
+            # Detect hand landmarks
             frame = tracker.draw_landmarks(
                 frame,
                 result
             )
 
-            # Count detected hands
             hand_count = len(result.hand_landmarks)
+
+            # =========================
+            # FINGER DETECTION
+            # =========================
+
+            if hand_count > 0:
+
+                for hand_index, hand_landmarks in enumerate(
+                    result.hand_landmarks
+                ):
+
+                    handedness = result.handedness[
+                        hand_index
+                    ][0].category_name
+
+                    fingers = finger_detector.detect_fingers(
+                        hand_landmarks,
+                        handedness
+                    )
+
+                    print(
+                        handedness,
+                        "Hand:",
+                        fingers
+                    )
 
             frame_counter += 1
 

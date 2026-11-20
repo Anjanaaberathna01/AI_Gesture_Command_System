@@ -10,23 +10,30 @@ class FingerDetector:
         fingers = {}
 
         # =========================
-        # THUMB
+        # THUMB DETECTION
         # =========================
+
+        import math
+
 
         thumb_tip = hand_landmarks[4]
         thumb_ip = hand_landmarks[3]
+        thumb_mcp = hand_landmarks[2]
+        index_mcp = hand_landmarks[5]
 
-        if handedness == "Right":
+        def distance(p1, p2):
 
-            fingers["Thumb"] = (
-                thumb_tip.x < thumb_ip.x
+            return math.sqrt(
+                (p1.x - p2.x) ** 2 +
+                (p1.y - p2.y) ** 2
             )
 
-        else:
+        tip_to_index = distance(thumb_tip, index_mcp)
+        mcp_to_index = distance(thumb_mcp, index_mcp)
 
-            fingers["Thumb"] = (
-                thumb_tip.x > thumb_ip.x
-            )
+        fingers["Thumb"] = (
+            tip_to_index > mcp_to_index * 1.25
+        )
 
         # =========================
         # INDEX FINGER
