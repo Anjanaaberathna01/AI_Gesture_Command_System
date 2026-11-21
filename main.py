@@ -9,7 +9,7 @@ from gestures.gesture_recognizer import GestureRecognizer
 from control.mouse_controller import MouseController
 from control.mouse_click_controller import MouseClickController
 from gestures.thumb_bend_detector import ThumbBendDetector
-
+from control.scroll_controller import ScrollController
 
 def main():
 
@@ -38,6 +38,10 @@ def main():
     )
     mouse_controller = MouseController(
         smoothing=0.25
+    )
+    scroll_controller = ScrollController(
+    scroll_threshold=0.015,
+    scroll_amount=3
     )
     previous_gestures = {}
 
@@ -113,6 +117,13 @@ def main():
                             index_tip.x,
                             index_tip.y
                         )
+                        scroll_controller.reset()
+                    elif gesture == "PEACE":
+                        index_tip = hand_landmarks[8]
+
+                        scroll_controller.scroll(index_tip.y)
+                    else:
+                        scroll_controller.reset()
 
                     # Print only when gesture changes
                     if previous_gestures.get(hand_index) != gesture:
