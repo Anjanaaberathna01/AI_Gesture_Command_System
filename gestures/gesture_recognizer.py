@@ -34,4 +34,11 @@ class GestureRecognizer:
         ):
             return "PEACE"
 
+        # Three Finger Gesture
+        if (
+            index and middle and ring and
+            not thumb and not pinky
+        ):
+            return "THREE_FINGER"
+
         return "UNKNOWN"
