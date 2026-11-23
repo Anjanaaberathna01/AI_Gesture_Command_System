@@ -12,11 +12,11 @@ def main():
     )
 
     test_positions = [
-        0.50,
-        0.55,
-        0.60,
         0.70,
-        0.75
+        0.65,
+        0.60,
+        0.50,
+        0.45
     ]
 
     print("Testing Right Swipe...")
