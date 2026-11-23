@@ -40,8 +40,8 @@ def main():
         smoothing=0.25
     )
     scroll_controller = ScrollController(
-    scroll_threshold=0.015,
-    scroll_amount=3
+    scroll_threshold=0.008,
+    scroll_amount=30
     )
     previous_gestures = {}
 
