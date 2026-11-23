@@ -6,6 +6,9 @@ class VolumeController:
     def __init__(self, volume_step=0.05):
 
         self.volume_step = volume_step
+        self.previous_y = None
+        self.accumulated_movement = 0
+        self.movement_threshold = 0.025
 
         device = AudioUtilities.GetSpeakers()
 
@@ -55,3 +58,33 @@ class VolumeController:
     def release(self):
 
         print("Volume Controller released!")
+
+    def adjust_volume(self, current_y):
+
+        if self.previous_y is None:
+
+            self.previous_y = current_y
+            return
+
+        movement = self.previous_y - current_y
+
+        self.previous_y = current_y
+
+        self.accumulated_movement += movement
+
+        if self.accumulated_movement >= self.movement_threshold:
+
+            self.increase_volume()
+
+            self.accumulated_movement = 0
+
+        elif self.accumulated_movement <= -self.movement_threshold:
+
+            self.decrease_volume()
+
+            self.accumulated_movement = 0
+    
+    def reset_movement(self):
+
+        self.previous_y = None
+        self.accumulated_movement = 0
