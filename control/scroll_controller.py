@@ -4,7 +4,7 @@ import pyautogui
 
 class ScrollController:
 
-    def __init__(self, scroll_threshold=0.015, scroll_amount=3):
+    def __init__(self, scroll_threshold=0.015, scroll_amount=20):
 
         self.scroll_threshold = scroll_threshold
         self.scroll_amount = scroll_amount
