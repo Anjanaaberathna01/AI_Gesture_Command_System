@@ -31,7 +31,7 @@ def main():
     mouse_click_controller = MouseClickController(
         debounce_time=0.08,
         double_click_interval=0.45,
-        execute_clicks=True
+        execute_clicks=False
     )
     thumb_bend_detector = ThumbBendDetector(
         bend_threshold=160
