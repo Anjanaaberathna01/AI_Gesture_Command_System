@@ -10,6 +10,7 @@ from control.mouse_controller import MouseController
 from control.mouse_click_controller import MouseClickController
 from gestures.thumb_bend_detector import ThumbBendDetector
 from control.scroll_controller import ScrollController
+from control.volume_controller import VolumeController
 
 def main():
 
@@ -43,6 +44,10 @@ def main():
     scroll_threshold=0.008,
     scroll_amount=30
     )
+    volume_controller = VolumeController(
+        volume_step=0.05
+    )
+
     previous_gestures = {}
 
     previous_time = time.time()
@@ -108,8 +113,24 @@ def main():
                         is_thumb_bent
                     )
 
-                    # Mouse Cursor Control
-                    if gesture == "POINTING":
+                    # =========================
+                    # GESTURE CONTROLS
+                    # =========================
+
+                    if gesture == "THREE_FINGER":
+
+                        wrist = hand_landmarks[0]
+
+                        volume_controller.adjust_volume(
+                            wrist.y
+                        )
+
+                        scroll_controller.reset()
+
+
+                    elif gesture == "POINTING":
+
+                        volume_controller.reset_movement()
 
                         index_tip = hand_landmarks[8]
 
@@ -117,12 +138,25 @@ def main():
                             index_tip.x,
                             index_tip.y
                         )
+
                         scroll_controller.reset()
+
+
                     elif gesture == "PEACE":
+
+                        volume_controller.reset_movement()
+
                         index_tip = hand_landmarks[8]
 
-                        scroll_controller.scroll(index_tip.y)
+                        scroll_controller.scroll(
+                            index_tip.y
+                        )
+
+
                     else:
+
+                        volume_controller.reset_movement()
+
                         scroll_controller.reset()
 
                     # Print only when gesture changes
@@ -134,7 +168,7 @@ def main():
                             f"Fingers: {fingers['Count']}"
                         )
 
-                        previous_gestures[hand_index] = gesture
+                    previous_gestures[hand_index] = gesture
 
                     # Display gesture on webcam
                     height, width, _ = frame.shape
@@ -219,6 +253,7 @@ def main():
 
     finally:
         mouse_controller.release()
+        volume_controller.release()
         tracker.close()
         webcam.release()
 

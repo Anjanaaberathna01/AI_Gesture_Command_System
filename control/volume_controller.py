@@ -67,24 +67,20 @@ class VolumeController:
             return
 
         movement = self.previous_y - current_y
-
         self.previous_y = current_y
-
         self.accumulated_movement += movement
 
         if self.accumulated_movement >= self.movement_threshold:
-
             self.increase_volume()
-
             self.accumulated_movement = 0
 
         elif self.accumulated_movement <= -self.movement_threshold:
-
             self.decrease_volume()
-
             self.accumulated_movement = 0
     
     def reset_movement(self):
-
+        """
+        Reset the accumulated movement.
+        """
         self.previous_y = None
         self.accumulated_movement = 0
