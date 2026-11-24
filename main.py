@@ -190,8 +190,17 @@ def main():
 
                         swipe_detectors[hand_index].reset()
 
-                    else:
+                    elif gesture == "OPEN_PALM":
+                        # swipe detection for open palm gesture   
+                        swipe = swipe_detectors[
+                            hand_index].detect_swipe(wrist.x)
+                        if swipe:
+                            print(f"Right Hand | Detected Gesture: {swipe}")
 
+
+                    else:
+                        # Reset all controls when no specific gesture is detected
+                        swipe_detectors[hand_index].reset()    
                         # Stop other movement controls
                         volume_controller.reset_movement()
 
