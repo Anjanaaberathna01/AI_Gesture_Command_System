@@ -32,7 +32,7 @@ class FingerDetector:
         mcp_to_index = distance(thumb_mcp, index_mcp)
 
         fingers["Thumb"] = (
-            tip_to_index > mcp_to_index * 1.25
+            tip_to_index > mcp_to_index * 1.15
         )
 
         # =========================
