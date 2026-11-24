@@ -15,6 +15,8 @@ from control.mouse_click_controller import MouseClickController
 from control.scroll_controller import ScrollController
 from control.volume_controller import VolumeController
 from control.browser_controller import BrowserController
+from control.swipe_command_controller import SwipeCommandController
+
 
 def main():
 
@@ -58,6 +60,10 @@ def main():
     )
 
     browser_controller = BrowserController()
+
+    swipe_command_controller = SwipeCommandController(
+        cooldown=1.0
+    )
 
     # Swipe detectors (one for each hand)
     swipe_detectors = {}
@@ -196,11 +202,14 @@ def main():
                         # swipe detection for open palm gesture   
                         swipe = swipe_detectors[
                             hand_index].detect_swipe(wrist.x)
-                        if swipe == "SWIPE_LEFT":
-                            browser_controller.swipe_left()
+                        
+                        if swipe and swipe_command_controller.can_execute():
+                            
+                            if swipe == "SWIPE_LEFT":
+                                browser_controller.swipe_left()
 
-                        elif swipe == "SWIPE_RIGHT":
-                            browser_controller.swipe_right()
+                            elif swipe == "SWIPE_RIGHT":
+                                browser_controller.swipe_right()
 
 
                     else:
