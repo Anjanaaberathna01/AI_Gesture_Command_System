@@ -1,21 +1,22 @@
+
 import time
+from collections import deque
 
 
 class SwipeDetector:
 
     def __init__(
         self,
-        swipe_threshold=0.15,
-        max_swipe_time=0.5,
-        cooldown=0.5
+        swipe_threshold=0.11,
+        max_swipe_time=0.8,
+        cooldown=0.6
     ):
 
         self.swipe_threshold = swipe_threshold
         self.max_swipe_time = max_swipe_time
         self.cooldown = cooldown
 
-        self.start_position = None
-        self.start_time = None
+        self.positions = deque()
 
         self.last_swipe_time = 0
 
@@ -27,41 +28,42 @@ class SwipeDetector:
         if current_time - self.last_swipe_time < self.cooldown:
             return None
 
-        # Initialize starting position
-        if self.start_position is None:
+        # Add current position
+        self.positions.append(
+            (current_time, current_x)
+        )
 
-            self.start_position = current_x
-            self.start_time = current_time
+        # Remove old positions
+        while self.positions:
 
+            elapsed = current_time - self.positions[0][0]
+
+            if elapsed > self.max_swipe_time:
+                self.positions.popleft()
+
+            else:
+                break
+
+        # Need at least two positions
+        if len(self.positions) < 2:
             return None
 
-        # Calculate movement
-        movement = current_x - self.start_position
+        start_x = self.positions[0][1]
 
-        elapsed_time = current_time - self.start_time
+        movement = current_x - start_x
 
-        # Check maximum swipe duration
-        if elapsed_time > self.max_swipe_time:
-
-            self.start_position = current_x
-            self.start_time = current_time
-
-            return None
-
-        # Detect right swipe
+        # Right swipe
         if movement >= self.swipe_threshold:
 
             self.last_swipe_time = current_time
-
             self.reset()
 
             return "SWIPE_RIGHT"
 
-        # Detect left swipe
+        # Left swipe
         elif movement <= -self.swipe_threshold:
 
             self.last_swipe_time = current_time
-
             self.reset()
 
             return "SWIPE_LEFT"
@@ -70,5 +72,4 @@ class SwipeDetector:
 
     def reset(self):
 
-        self.start_position = None
-        self.start_time = None
+        self.positions.clear()

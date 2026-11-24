@@ -123,9 +123,9 @@ def main():
                     if hand_index not in swipe_detectors:
 
                         swipe_detectors[hand_index] = SwipeDetector(
-                            swipe_threshold=0.15,
-                            max_swipe_time=0.5,
-                            cooldown=0.5
+                            swipe_threshold=0.11,
+                            max_swipe_time=0.8,
+                            cooldown=0.6
                         )
 
                     # =========================
@@ -203,11 +203,16 @@ def main():
 
                         wrist = hand_landmarks[0]
 
+                        print(
+                            f"Gesture: {gesture} | "
+                            f"Wrist X: {wrist.x:.3f}"
+                        )
+
                         swipe = swipe_detectors[
                             hand_index
-                        ].detect_swipe(
-                            wrist.x
-                        )
+                        ].detect_swipe(wrist.x)
+
+                        print(f"Swipe Result: {swipe}")
 
                         if swipe is not None:
 
