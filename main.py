@@ -4,13 +4,17 @@ import time
 
 from camera.webcam import Webcam
 from vision.hand_tracker import HandTracker
+
 from gestures.finger_detector import FingerDetector
 from gestures.gesture_recognizer import GestureRecognizer
+from gestures.thumb_bend_detector import ThumbBendDetector
+from gestures.swipe_detector import SwipeDetector
+
 from control.mouse_controller import MouseController
 from control.mouse_click_controller import MouseClickController
-from gestures.thumb_bend_detector import ThumbBendDetector
 from control.scroll_controller import ScrollController
 from control.volume_controller import VolumeController
+
 
 def main():
 
@@ -29,24 +33,32 @@ def main():
 
     finger_detector = FingerDetector()
     gesture_recognizer = GestureRecognizer()
+
     mouse_click_controller = MouseClickController(
         debounce_time=0.08,
         double_click_interval=0.45,
         execute_clicks=False
     )
+
     thumb_bend_detector = ThumbBendDetector(
         bend_threshold=160
     )
+
     mouse_controller = MouseController(
         smoothing=0.25
     )
+
     scroll_controller = ScrollController(
-    scroll_threshold=0.008,
-    scroll_amount=30
+        scroll_threshold=0.008,
+        scroll_amount=30
     )
+
     volume_controller = VolumeController(
         volume_step=0.05
     )
+
+    # Swipe detectors (one for each hand)
+    swipe_detectors = {}
 
     previous_gestures = {}
 
@@ -54,19 +66,26 @@ def main():
     frame_counter = 0
 
     try:
+
         while True:
+
             frame = webcam.read_frame()
+
             if frame is None:
                 print("Camera frame error!")
                 break
+
             timestamp_ms = int(time.perf_counter() * 1000)
 
-            # Detect hands
+            # =========================
+            # HAND DETECTION
+            # =========================
+
             result = tracker.detect_hands(
                 frame,
                 timestamp_ms
             )
-            # Detect hand landmarks
+
             frame = tracker.draw_landmarks(
                 frame,
                 result
@@ -93,20 +112,30 @@ def main():
                         handedness
                     )
 
-                    # Recognize gesture
-                    gesture = gesture_recognizer.recognize(fingers)
+                    gesture = gesture_recognizer.recognize(
+                        fingers
+                    )
 
-                    # Thumb Bend Detection
+                    # =========================
+                    # SWIPE DETECTOR INITIALIZATION
+                    # =========================
+
+                    if hand_index not in swipe_detectors:
+
+                        swipe_detectors[hand_index] = SwipeDetector(
+                            swipe_threshold=0.15,
+                            max_swipe_time=0.5,
+                            cooldown=0.5
+                        )
+
+                    # =========================
+                    # THUMB BEND DETECTION
+                    # =========================
+
                     thumb_data = thumb_bend_detector.detect_bend(
                         hand_landmarks
                     )
 
-                    print(
-                        f"{handedness} Hand | "
-                        f"Thumb Angle: {thumb_data['Angle']} | "
-                        f"Thumb State: {thumb_data['State']}"
-                    )
-                    # Mouse Click Control
                     is_thumb_bent = thumb_data["Bent"]
 
                     mouse_click_controller.update(
@@ -117,8 +146,11 @@ def main():
                     # GESTURE CONTROLS
                     # =========================
 
+                    swipe = None
+
                     if gesture == "THREE_FINGER":
 
+                        # Volume Control
                         wrist = hand_landmarks[0]
 
                         volume_controller.adjust_volume(
@@ -127,9 +159,11 @@ def main():
 
                         scroll_controller.reset()
 
+                        swipe_detectors[hand_index].reset()
 
                     elif gesture == "POINTING":
 
+                        # Mouse Movement
                         volume_controller.reset_movement()
 
                         index_tip = hand_landmarks[8]
@@ -141,9 +175,11 @@ def main():
 
                         scroll_controller.reset()
 
+                        swipe_detectors[hand_index].reset()
 
                     elif gesture == "PEACE":
 
+                        # Scroll Control
                         volume_controller.reset_movement()
 
                         index_tip = hand_landmarks[8]
@@ -152,14 +188,38 @@ def main():
                             index_tip.y
                         )
 
+                        swipe_detectors[hand_index].reset()
 
                     else:
 
+                        # Stop other movement controls
                         volume_controller.reset_movement()
 
                         scroll_controller.reset()
 
-                    # Print only when gesture changes
+                        # =========================
+                        # SWIPE DETECTION
+                        # =========================
+
+                        wrist = hand_landmarks[0]
+
+                        swipe = swipe_detectors[
+                            hand_index
+                        ].detect_swipe(
+                            wrist.x
+                        )
+
+                        if swipe is not None:
+
+                            print(
+                                f"{handedness} Hand | "
+                                f"Detected Gesture: {swipe}"
+                            )
+
+                    # =========================
+                    # GESTURE CHANGE DETECTION
+                    # =========================
+
                     if previous_gestures.get(hand_index) != gesture:
 
                         print(
@@ -170,7 +230,10 @@ def main():
 
                     previous_gestures[hand_index] = gesture
 
-                    # Display gesture on webcam
+                    # =========================
+                    # DISPLAY ON WEBCAM
+                    # =========================
+
                     height, width, _ = frame.shape
 
                     wrist = hand_landmarks[0]
@@ -178,9 +241,11 @@ def main():
                     text_x = int(wrist.x * width)
                     text_y = int(wrist.y * height) - 20
 
+                    display_text = swipe if swipe else gesture
+
                     cv2.putText(
                         frame,
-                        gesture,
+                        display_text,
                         (text_x, max(text_y, 150)),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         0.8,
@@ -194,14 +259,30 @@ def main():
                         fingers
                     )
 
+            # =========================
+            # FRAME COUNTER
+            # =========================
+
             frame_counter += 1
 
             if frame_counter % 30 == 0:
-                print("Detected hands:", hand_count)
 
-            # Calculate FPS
+                print(
+                    "Detected hands:",
+                    hand_count
+                )
+
+            # =========================
+            # FPS CALCULATION
+            # =========================
+
             current_time = time.time()
-            fps = 1 / max(current_time - previous_time, 0.001)
+
+            fps = 1 / max(
+                current_time - previous_time,
+                0.001
+            )
+
             previous_time = current_time
 
             cv2.putText(
@@ -225,11 +306,21 @@ def main():
             )
 
             if hand_count > 0:
+
                 status = "HAND TRACKING ACTIVE"
                 color = (0, 255, 0)
+
             else:
+
                 status = "NO HAND DETECTED"
                 color = (0, 0, 255)
+
+                # Reset swipe tracking when no hands are detected
+                for detector in swipe_detectors.values():
+                    detector.reset()
+
+                volume_controller.reset_movement()
+                scroll_controller.reset()
 
             cv2.putText(
                 frame,
@@ -252,10 +343,13 @@ def main():
                 break
 
     finally:
+
         mouse_controller.release()
         volume_controller.release()
         tracker.close()
         webcam.release()
+
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
