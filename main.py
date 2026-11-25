@@ -16,7 +16,7 @@ from control.scroll_controller import ScrollController
 from control.volume_controller import VolumeController
 from control.browser_controller import BrowserController
 from control.swipe_command_controller import SwipeCommandController
-
+from control.window_controller import WindowController
 
 def main():
 
@@ -78,6 +78,10 @@ def main():
     browser_controller = BrowserController()
 
     swipe_command_controller = SwipeCommandController(
+        cooldown=1.0
+    )
+
+    window_controller = WindowController(
         cooldown=1.0
     )
 
@@ -273,6 +277,10 @@ def main():
 
                     elif gesture == "OPEN_PALM":
 
+                        if previous_gestures.get(hand_index) != "OPEN_PALM":
+                            window_controller.restore_window()
+                            last_command = "WINDOW RESTORED"
+
                         # Stop other movement controls
                         volume_controller.reset_movement()
                         scroll_controller.reset()
@@ -314,7 +322,16 @@ def main():
                                 print(
                                     "Swipe command blocked by cooldown"
                                 )
+                    #-------------------------
+                    # Window Minimize
+                    #-------------------------
 
+                    elif gesture == "FIST":
+                       if previous_gestures.get(hand_index) != "FIST":
+                            window_controller.minimize_window()
+                            print("Fist detected, minimizing window...")
+                            last_command = "WINDOW MINIMIZE"
+                       
                     # -------------------------
                     # UNKNOWN / OTHER GESTURES
                     # -------------------------
