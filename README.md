@@ -157,7 +157,7 @@ The application displays:
 
 ## 👨‍💻 Author
 
-**Your Name**
+**Anjana Aberathna**
 
 Computer Science Undergraduate | AI & Software Development Enthusiast
 
