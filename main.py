@@ -96,6 +96,15 @@ def main():
     # =========================
 
     previous_gestures = {}
+    window_gesture_candidates = {}
+    window_gesture_counts = {}
+    window_last_triggered = {}
+
+    # 0 = Waiting for first FIST
+    # 1 = Waiting for OPEN_PALM
+    # 2 = Waiting for second FIST
+
+    window_stage = 0
 
     # =========================
     # DISPLAY VARIABLES
@@ -216,6 +225,73 @@ def main():
 
                     swipe = None
 
+                    # =========================
+                    # SEQUENCE BASED WINDOW CONTROL
+                    # =========================
+
+                    window_gesture = (
+                        gesture
+                        if gesture in ("FIST", "OPEN_PALM")
+                        else None
+                    )
+
+                    if window_gesture is not None:
+
+                        if window_gesture_candidates.get(hand_index) != window_gesture:
+
+                            window_gesture_candidates[hand_index] = window_gesture
+                            window_gesture_counts[hand_index] = 1
+
+                        else:
+
+                            window_gesture_counts[hand_index] = (
+                                window_gesture_counts.get(hand_index, 0) + 1
+                            )
+
+                        # Require 8 consecutive frames
+                        if (
+                            window_gesture_counts[hand_index] >= 8
+                            and window_last_triggered.get(hand_index) != window_gesture
+                        ):
+
+                            executed = False
+
+                            # STEP 1: FIST - Select target window
+                            if window_stage == 0 and window_gesture == "FIST":
+
+                                executed = window_controller.capture_target_window()
+
+                                if executed:
+                                    window_stage = 1
+                                    last_command = "WINDOW CONTROL ARMED"
+
+                            # STEP 2: OPEN PALM - Maximize selected window
+                            elif window_stage == 1 and window_gesture == "OPEN_PALM":
+
+                                executed = window_controller.maximize_target_window()
+
+                                if executed:
+                                    window_stage = 2
+                                    last_command = "WINDOW MAXIMIZED"
+
+                            # STEP 3: FIST - Minimize selected window
+                            elif window_stage == 2 and window_gesture == "FIST":
+
+                                executed = window_controller.minimize_target_window()
+
+                                if executed:
+                                    window_stage = 0
+                                    last_command = "WINDOW MINIMIZED"
+
+                            # Only lock the gesture after a successful action
+                            window_last_triggered[hand_index] = window_gesture
+
+                    else:
+
+                        window_gesture_candidates[hand_index] = None
+                        window_gesture_counts[hand_index] = 0
+
+
                     # -------------------------
                     # THREE FINGER - VOLUME
                     # -------------------------
@@ -277,18 +353,12 @@ def main():
 
                     elif gesture == "OPEN_PALM":
 
-                        if previous_gestures.get(hand_index) != "OPEN_PALM":
-                            window_controller.restore_window()
-                            last_command = "WINDOW RESTORED"
-
                         # Stop other movement controls
                         volume_controller.reset_movement()
                         scroll_controller.reset()
 
                         # Detect swipe using wrist X
-                        swipe = swipe_detectors[
-                            hand_index
-                        ].detect_swipe(wrist.x)
+                        swipe = swipe_detectors[hand_index].detect_swipe(wrist.x)
 
                         if swipe is not None:
 
@@ -322,15 +392,6 @@ def main():
                                 print(
                                     "Swipe command blocked by cooldown"
                                 )
-                    #-------------------------
-                    # Window Minimize
-                    #-------------------------
-
-                    elif gesture == "FIST":
-                       if previous_gestures.get(hand_index) != "FIST":
-                            window_controller.minimize_window()
-                            print("Fist detected, minimizing window...")
-                            last_command = "WINDOW MINIMIZE"
                        
                     # -------------------------
                     # UNKNOWN / OTHER GESTURES
@@ -406,6 +467,10 @@ def main():
                 volume_controller.reset_movement()
 
                 scroll_controller.reset()
+
+                window_gesture_candidates.clear()
+                window_gesture_counts.clear()
+                window_last_triggered.clear()
 
                 current_swipe = "NONE"
                 current_gesture = "NO HAND"
